@@ -90,29 +90,73 @@ def make_dataset():
 
 # make_dataset()
 
-# Premiere to ffmpeg
+# Premiere to ffmpeg timestamps
 def convert_timestamps(timestamp):
     last2 = int(timestamp[-2:])
     frac = int(1000*last2/30)
     return f'{timestamp[:-3]}.{frac}'
 
+# Premiere to ffmpeg timestamps after cutting video
+# to first frame of video samples
+def convert_timestamps_ending(timestamp, new_start):
+    # time since new_start
+    # e.g. '01:20:46:11'
+    last2digits = int(timestamp[-2:]) - int(new_start[-2:])
+    carry1 = False
+    if last2digits < 0: 
+        carry1 = True
+        last2digits = 30 + last2digits
+    third = int(1000*last2digits/30)
+    
+    if carry1: second = int(timestamp[6:8]) - int(new_start[6:8]) - 1
+    else: second = int(timestamp[6:8]) - int(new_start[6:8])
+    carry2 = False
+    if second < 0: 
+        carry2 = True
+        second = 60 + second
+
+    if carry2: first = int(timestamp[3:5]) - int(new_start[3:5]) - 1
+    else: first = int(timestamp[3:5]) - int(new_start[3:5])
+    carry3 = False
+    if first < 0:
+        carry3 = True
+
+    if carry3: zero = int(timestamp[0:2]) - int(new_start[0:2]) - 1
+    else: zero = int(timestamp[0:2]) - int(new_start[0:2])
+    
+    if zero < 10:
+        zero = '0' + str(zero)
+    if first < 10:
+        first = '0' + str(first)
+    if second < 10:
+        second = '0' + str(second)
+    timestamp = f'00:{first}:{second}.{third}'
+    return timestamp
+
 def make_dataset2(source_video, timestamps, out_folder):
+    new_start = '01:20:46:11'
     # IN
-    in_ts = pd.read_excel(timestamps, sheet_name='IN')
+    in_ts = pd.read_excel(timestamps, sheet_name='IN2')
     for i, (start, end) in enumerate(zip(in_ts.loc[:, 'start'], in_ts.loc[:, 'end'])):
-        start, end = convert_timestamps(start), convert_timestamps(end)
-        outfile = os.path.join(out_folder, 'ins', f'in{i}.mp4')
-        com = f'ffmpeg -i {source_video} -ss {start} -to {end} {outfile}'
+        start, end = convert_timestamps_ending(start, new_start), convert_timestamps_ending(end, new_start)
+        filename = f'spencer_sid_2_in_{i}.mp4'
+        out_path = os.path.join(out_folder, 'ins', filename)
+        com = f'ffmpeg -i {source_video} -ss {start} -to {end} {out_path}'
         os.system(com)
+        print(f'done {out_path}')
 
     # OUT
-    out_ts = pd.read_excel(timestamps, sheet_name='OUT')
+    out_ts = pd.read_excel(timestamps, sheet_name='OUT2')
     for i, (start, end) in enumerate(zip(out_ts.loc[:, 'start'], out_ts.loc[:, 'end'])):
-        start, end = convert_timestamps(start), convert_timestamps(end)
-        outfile = os.path.join(out_folder, 'outs', f'out{i}.mp4')
-        com = f'ffmpeg -i {source_video} -ss {start} -to {end} {outfile}'
+        start, end = convert_timestamps_ending(start, new_start), convert_timestamps_ending(end, new_start)
+        filename = f'spencer_sid_2_out_{i}.mp4'
+        out_path = os.path.join(out_folder, 'outs', filename)
+        com = f'ffmpeg -i {source_video} -ss {start} -to {end} {out_path}'
         os.system(com)
+        print(f'done {out_path}')
 
 
-source_video = os.path.join('source_videos', 'spencer_sid.mp4')
+source_video = os.path.join('source_videos', 'spencer_sid_ending.mp4')
 make_dataset2(source_video, 'timestamps.xlsx', 'sid_dataset')
+
+            
