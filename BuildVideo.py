@@ -2,6 +2,7 @@ import enum
 import cv2
 import numpy as np
 
+# make a video using list of start, end timestamps
 def build_video(source, out_name, starts, ends, fps, size):
     video = cv2.VideoWriter(out_name, cv2.VideoWriter_fourcc(*'h264'), fps, size)
     for i, start in enumerate(starts):
