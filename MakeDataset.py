@@ -7,8 +7,8 @@ from tqdm import tqdm
 import time
 import os
 
-from data.TimestampHelpers import subtract_timestamps, convert_timestamps
-from data.VideoHelpers import cut_video
+from data.TimestampHelpers import subtract_timestamps, frames_to_dec
+from data.VideoHelpers import cut_video_range
 
 def get_video_info(capture):
     fps = math.ceil(capture.get(cv2.CAP_PROP_FPS)) # get fps
@@ -103,20 +103,20 @@ def make_dataset2(source_video, timestamps, out_folder):
     
     in_filenames = []
     for i, (start, end) in enumerate(zip(in_ts.loc[:, 'start'], in_ts.loc[:, 'end'])):
-        # start, end = subtract_timestamps(new_start, start), subtract_timestamps(new_start, end)
-        start, end = convert_timestamps(start), convert_timestamps(end)
+        # start, end = subtract_timestamps(start, new_start), subtract_timestamps(end, new_start)
+        start, end = frames_to_dec(start), frames_to_dec(end)
         filename = f'{in_filename}_{i}.mp4'
         out_path = os.path.join(out_folder, 'ins', filename)
-        cut_video(source_video, start, end, out_path)
+        cut_video_range(source_video, start, end, out_path)
         in_filenames.append(out_path)
 
     out_filenames = []
     for i, (start, end) in enumerate(zip(out_ts.loc[:, 'start'], out_ts.loc[:, 'end'])):
-        # start, end = subtract_timestamps(new_start, start), subtract_timestamps(new_start, end)
-        start, end = convert_timestamps(start), convert_timestamps(end)
+        # start, end = subtract_timestamps(start, new_start), subtract_timestamps(end, new_start)
+        start, end = frames_to_dec(start), frames_to_dec(end)
         filename = f'{out_filename}_{i}.mp4'
         out_path = os.path.join(out_folder, 'outs', filename)
-        cut_video(source_video, start, end, out_path)
+        cut_video_range(source_video, start, end, out_path)
         out_filenames.append(out_path)
 
     print('Num files produced:', len(in_filenames)+len(out_filenames))

@@ -1,13 +1,14 @@
 # Find difference between two times
 # 30 fps
-# t2 - t1
-def subtract_timestamps(t1, t2):
+# t - sub
+# outputs in decimal form (frames in decimals)
+def subtract_timestamps(t, sub):
     # time since new_start
     # e.g. '01:20:46:11'
     # Output: 01:20:46.367
 
     # frames
-    last2digits = int(t2[-2:]) - int(t1[-2:])
+    last2digits = int(t[-2:]) - int(sub[-2:])
     carry1 = False
     if last2digits < 0: 
         carry1 = True
@@ -15,7 +16,7 @@ def subtract_timestamps(t1, t2):
     third = int(1000*last2digits/30)
     
     # seconds
-    second = int(t2[6:8]) - int(t1[6:8])
+    second = int(t[6:8]) - int(sub[6:8])
     if carry1: second -= 1
     carry2 = False
     if second < 0: 
@@ -23,14 +24,14 @@ def subtract_timestamps(t1, t2):
         second = 60 + second
 
     # minutes
-    first = int(t2[3:5]) - int(t1[3:5])
+    first = int(t[3:5]) - int(sub[3:5])
     if carry2: first -= 1
     carry3 = False
     if first < 0:
         carry3 = True
 
     # hours
-    zero = int(t2[0:2]) - int(t1[0:2])
+    zero = int(t[0:2]) - int(sub[0:2])
     if carry3: zero -= 1
     
     if zero < 10:
@@ -43,12 +44,14 @@ def subtract_timestamps(t1, t2):
     return difference
 
 
+# Outputs in decimal form
+# frames in decimals
 def add_timestamps(t1, t2):
 
     # frames
     last2digits = int(t2[-2:]) + int(t1[-2:])
     carry1 = False
-    if last2digits > 30: 
+    if last2digits >= 30: 
         carry1 = True
         last2digits = last2digits - 30
     third = int(1000*last2digits/30)
@@ -57,7 +60,7 @@ def add_timestamps(t1, t2):
     second = int(t2[6:8]) + int(t1[6:8])
     if carry1: second += 1
     carry2 = False
-    if second > 60: 
+    if second >= 60: 
         carry2 = True
         second = second - 60
 
@@ -65,7 +68,7 @@ def add_timestamps(t1, t2):
     first = int(t2[3:5]) + int(t1[3:5])
     if carry2: first += 1
     carry3 = False
-    if first > 60:
+    if first >= 60:
         carry3 = True
         first = first - 60
 
@@ -84,6 +87,7 @@ def add_timestamps(t1, t2):
     return sum_time
 
 # True if t1 < t2 (t2 is after)
+# timestamps in frames
 def compare_timestamps(t1, t2):
     t1_hours, t2_hours = int(t1[0:2]), int(t2[0:2])
     if t1_hours < t2_hours: return True
@@ -109,13 +113,23 @@ def compare_timestamps(t1, t2):
         exit(1)
 
 # Premiere to ffmpeg timestamps
-# '01:20:46:10' -> '01:20:46:33'
-def convert_timestamps(timestamp):
+# '01:20:46:10' -> '01:20:46.333'
+def frames_to_dec(timestamp):
     last2 = int(timestamp[-2:])
     frac = int(1000*last2/30)
     return f'{timestamp[:-3]}.{frac}'
 
+# decimal ts to frame ts
+def dec_to_frames(timestamp):
+    non_ms = timestamp.split('.')[0]
+    ms = int(timestamp.split('.')[-1])
+    frames = str(int(ms*30/1000))
+    if len(frames) == 1:
+        frames = f'0{frames}'
+    return f'{non_ms}:{frames}'
+
 # gets sec.ms of a timestamp
+# that's already in decimal form
 def to_sec_ms(timestamp):
     sec_ms = int(timestamp[6:8]) + int(timestamp.split('.')[-1])/1000
     return sec_ms
@@ -141,7 +155,7 @@ def miniclips(t, start, end, label):
         next_ts = add_timestamps(next_ts, t)
 
     # end "overflow"
-    dif = subtract_timestamps(start, end)
+    dif = subtract_timestamps(end, start)
     if int(dif[6:8]) + int(dif.split('.')[-1])/1000 > 0.3:
         label = None 
         # 
