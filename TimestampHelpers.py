@@ -1,3 +1,5 @@
+import pandas as pd
+
 # Find difference between two times
 # 30 fps
 # t - sub
@@ -134,33 +136,25 @@ def to_sec_ms(timestamp):
     sec_ms = int(timestamp[6:8]) + int(timestamp.split('.')[-1])/1000
     return sec_ms
 
-# outputs miniclips based on IN start, end
-# output list of 3s timestamps and labels
-# NOT FINISHED YET
-# Probably useless
-def miniclips(t, start, end, label):
-    # e.g. '01:20:46:11'
-    next_ts = add_timestamps(start, t)
+# Sorts in/out timestamps into array, also finds which is first
+def sort_timestamps(excel_sheet, in_sheet, out_sheet):
+    in_ts = pd.read_excel(excel_sheet, sheet_name=in_sheet)
+    out_ts = pd.read_excel(excel_sheet, sheet_name=out_sheet)
+    in_s, in_e = in_ts.loc[:, 'start'], in_ts.loc[:, 'end']
+    out_s, out_e = out_ts.loc[:, 'start'], out_ts.loc[:, 'end']
+
+    first_label = 1
     timestamps = []
-    labels = []
+    if compare_timestamps(out_s.iloc[0], in_s.iloc[0]):
+        timestamps.append(out_s.iloc[0])
+        first_label = 0
+    for t1, t2 in zip(in_ts.loc[:, 'start'], in_ts.loc[:, 'end']):
+        timestamps.append(t1)
+        timestamps.append(t2)
+    if compare_timestamps(in_e.iloc[-1], out_e.iloc[-1]):
+        timestamps.append(out_e.iloc[-1])
 
-    #
-    # add start "overflow"
-    
-    #
+    return first_label, timestamps
 
-    while compare_timestamps(next_ts, end): #if end is after next_ts
-        timestamps.append(next_ts)
-        labels.append(label)
-        next_ts = add_timestamps(next_ts, t)
-
-    # end "overflow"
-    dif = subtract_timestamps(end, start)
-    if int(dif[6:8]) + int(dif.split('.')[-1])/1000 > 0.3:
-        label = None 
-        # 
-        # do something here 
-    
-    return timestamps, labels
 
 

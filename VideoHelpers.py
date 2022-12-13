@@ -12,8 +12,7 @@ def cut_video_range(source_video, start, end, out_path):
     
     # no scale
     com = f'ffmpeg {loglevel} {stats} {time_range} {input_s} {codec} {fps} {out_path}'
-    os.system(com)
-
+    return os.system(com) # return 0 on success
 
 # Cut video to certain amount of frames
 def cut_video_frames(source_video, start, num_frames, out_path):
@@ -23,10 +22,11 @@ def cut_video_frames(source_video, start, num_frames, out_path):
     stats = '-stats' # Print progress/stats
 
     num_frames = f'-frames:v {num_frames}' # 96 frames here
-    scale = '-vf scale=224:224,setsar=1:1' # Scale, setsar (pixel aspect ratio) ,setsar=1:1
+    scale = '-vf scale=224:224,setsar=1' # Scale, setsar (pixel aspect ratio) ,setsar=1:1
 
     com = f'ffmpeg {loglevel} {stats} {input_s} -ss {start} {scale} {num_frames} {fps} {out_path}'
-    os.system(com)
+    return os.system(com) # return 0 on success
+
 
 
 # Generate new source video
@@ -48,7 +48,7 @@ def fill_blank_frames(source_video):
 def get_source_videos():
     source_videos = []
     names = ['spencer_glen.mp4','phuc_dan.mp4','andre_rh.mp4',
-            'glen_sid.mp4','spencer_sid_ending.mp4','roger_corrected.mp4']
+            'spencer_sid.mp4','spencer_sid_ending.mp4','roger_corrected.mp4']
     for filename in names:
         path = os.path.join('dataset', 'source_videos', filename)
         source_videos.append(path)
